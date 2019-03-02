@@ -42,20 +42,43 @@ import java.util.concurrent.TimeUnit;
  */
 public abstract class FailbackRegistry extends AbstractRegistry {
 
-    // Scheduled executor service
+    /**
+     * 定时任务执行器
+     *
+     * Scheduled executor service
+     */
     private final ScheduledExecutorService retryExecutor = Executors.newScheduledThreadPool(1, new NamedThreadFactory("DubboRegistryFailedRetryTimer", true));
 
-    // Timer for failure retry, regular check if there is a request for failure, and if there is, an unlimited retry
+    /**
+     * 失败重试定时器，定时检查是否有请求失败，如有，无限次重试
+     *
+     * Timer for failure retry, regular check if there is a request for failure, and if there is, an unlimited retry
+     */
     private final ScheduledFuture<?> retryFuture;
 
-    private final Set<URL> failedRegistered = new ConcurrentHashSet<URL>();
+    /**
+     * 失败发起注册失败的 URL 集合
+     */
+    private final Set<URL> failedRegistered = new ConcurrentHashSet<>();
 
-    private final Set<URL> failedUnregistered = new ConcurrentHashSet<URL>();
+    /**
+     * 失败取消注册失败的 URL 集合
+     */
+    private final Set<URL> failedUnregistered = new ConcurrentHashSet<>();
 
+    /**
+     * 失败发起订阅失败的监听器集合
+     */
     private final ConcurrentMap<URL, Set<NotifyListener>> failedSubscribed = new ConcurrentHashMap<URL, Set<NotifyListener>>();
 
+    /**
+     * 失败取消订阅失败的监听器集合
+     */
     private final ConcurrentMap<URL, Set<NotifyListener>> failedUnsubscribed = new ConcurrentHashMap<URL, Set<NotifyListener>>();
 
+    /**
+     * 失败通知通知的 URL 集合
+     */
     private final ConcurrentMap<URL, Map<NotifyListener, List<URL>>> failedNotified = new ConcurrentHashMap<URL, Map<NotifyListener, List<URL>>>();
 
     /**
@@ -151,7 +174,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
             } else {
                 logger.error("Failed to register " + url + ", waiting for retry, cause: " + t.getMessage(), t);
             }
-
+            // 将失败的注册请求记录到 `failedRegistered`，定时重试
             // Record a failed registration request to a failed list, retry regularly
             failedRegistered.add(url);
         }

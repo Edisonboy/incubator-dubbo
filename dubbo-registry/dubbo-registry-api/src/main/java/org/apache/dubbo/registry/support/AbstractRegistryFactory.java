@@ -43,8 +43,13 @@ public abstract class AbstractRegistryFactory implements RegistryFactory {
     // The lock for the acquisition process of the registry
     private static final ReentrantLock LOCK = new ReentrantLock();
 
+    /**
+     * Registry 集合
+     *
+     * key：{@link URL#toServiceString()}
+     */
     // Registry Collection Map<RegistryAddress, Registry>
-    private static final Map<String, Registry> REGISTRIES = new ConcurrentHashMap<String, Registry>();
+    private static final Map<String, Registry> REGISTRIES = new ConcurrentHashMap<>();
 
     /**
      * Get all registries
@@ -56,6 +61,8 @@ public abstract class AbstractRegistryFactory implements RegistryFactory {
     }
 
     /**
+     * 销毁
+     *
      * Close all created registries
      */
     // TODO: 2017/8/30 to move somewhere else better
@@ -80,31 +87,53 @@ public abstract class AbstractRegistryFactory implements RegistryFactory {
         }
     }
 
+    /**
+     * 获得注册中心 Registry 对象
+     *
+     * @param url 注册中心地址，不允许为空
+     * @return Registry 对象
+     */
     @Override
     public Registry getRegistry(URL url) {
+        // 修改 URL
+        // + `path`
         url = url.setPath(RegistryService.class.getName())
+                // + `parameters.interface`
                 .addParameter(Constants.INTERFACE_KEY, RegistryService.class.getName())
+                // - `export`
                 .removeParameters(Constants.EXPORT_KEY, Constants.REFER_KEY);
+        // 计算 key
         String key = url.toServiceStringWithoutResolving();
+        // 获得锁
         // Lock the registry access process to ensure a single instance of the registry
         LOCK.lock();
         try {
+            // 从缓存中获得 Registry 对象
             Registry registry = REGISTRIES.get(key);
             if (registry != null) {
                 return registry;
             }
+            // 缓存不存在，进行创建 Registry 对象
             registry = createRegistry(url);
             if (registry == null) {
                 throw new IllegalStateException("Can not create registry " + url);
             }
+            // 添加到缓存
             REGISTRIES.put(key, registry);
             return registry;
         } finally {
+            // 释放锁
             // Release the lock
             LOCK.unlock();
         }
     }
 
+    /**
+     * 创建 Registry 对象
+     *
+     * @param url 注册中心地址
+     * @return Registry 对象
+     */
     protected abstract Registry createRegistry(URL url);
 
 }

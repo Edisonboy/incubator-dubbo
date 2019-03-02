@@ -42,6 +42,13 @@ public interface RegistryFactory {
      * @param url Registry address, is not allowed to be empty
      * @return Registry reference, never return empty value
      */
+    /**
+     * @Adaptive({"protocol"}) 注解，Dubbo SPI 会自动实现 RegistryFactory$Adaptive 类，
+     * 根据 url.protocol 获得对应的 RegistryFactory 实现类。
+     * 例如，url.protocol = zookeeper 时，获得 ZookeeperRegistryFactory 实现类
+     * @param url
+     * @return
+     */
     @Adaptive({"protocol"})
     Registry getRegistry(URL url);
 

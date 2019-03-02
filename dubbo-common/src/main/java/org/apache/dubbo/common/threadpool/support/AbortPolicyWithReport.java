@@ -55,6 +55,7 @@ public class AbortPolicyWithReport extends ThreadPoolExecutor.AbortPolicy {
 
     @Override
     public void rejectedExecution(Runnable r, ThreadPoolExecutor e) {
+        // 打印告警日志
         String msg = String.format("Thread pool is EXHAUSTED!" +
                         " Thread Name: %s, Pool Size: %d (active: %d, core: %d, max: %d, largest: %d), Task: %d (completed: %d)," +
                         " Executor status:(isShutdown:%s, isTerminated:%s, isTerminating:%s), in %s://%s:%d!",
@@ -62,6 +63,7 @@ public class AbortPolicyWithReport extends ThreadPoolExecutor.AbortPolicy {
                 e.getTaskCount(), e.getCompletedTaskCount(), e.isShutdown(), e.isTerminated(), e.isTerminating(),
                 url.getProtocol(), url.getIp(), url.getPort());
         logger.warn(msg);
+        // 打印 JStack ，分析线程状态
         dumpJStack();
         throw new RejectedExecutionException(msg);
     }
@@ -69,51 +71,52 @@ public class AbortPolicyWithReport extends ThreadPoolExecutor.AbortPolicy {
     private void dumpJStack() {
         long now = System.currentTimeMillis();
 
+        // 每 10 分钟，打印一次
         //dump every 10 minutes
         if (now - lastPrintTime < 10 * 60 * 1000) {
             return;
         }
 
+        // 获得信号量
         if (!guard.tryAcquire()) {
             return;
         }
 
-        Executors.newSingleThreadExecutor().execute(new Runnable() {
-            @Override
-            public void run() {
-                String dumpPath = url.getParameter(Constants.DUMP_DIRECTORY, System.getProperty("user.home"));
+        // 创建线程池，后台执行打印 JStack
+        Executors.newSingleThreadExecutor().execute(() -> {
+            String dumpPath = url.getParameter(Constants.DUMP_DIRECTORY, System.getProperty("user.home"));
 
-                SimpleDateFormat sdf;
+            SimpleDateFormat sdf;
+            // 获得系统
+            String OS = System.getProperty("os.name").toLowerCase();
 
-                String OS = System.getProperty("os.name").toLowerCase();
+            // window system don't support ":" in file name
+            if(OS.contains("win")){
+                sdf = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
+            }else {
+                sdf = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss");
+            }
 
-                // window system don't support ":" in file name
-                if(OS.contains("win")){
-                    sdf = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
-                }else {
-                    sdf = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss");
-                }
-
-                String dateStr = sdf.format(new Date());
-                FileOutputStream jstackStream = null;
-                try {
-                    jstackStream = new FileOutputStream(new File(dumpPath, "Dubbo_JStack.log" + "." + dateStr));
-                    JVMUtil.jstack(jstackStream);
-                } catch (Throwable t) {
-                    logger.error("dump jstack error", t);
-                } finally {
-                    guard.release();
-                    if (jstackStream != null) {
-                        try {
-                            jstackStream.flush();
-                            jstackStream.close();
-                        } catch (IOException e) {
-                        }
+            String dateStr = sdf.format(new Date());
+            FileOutputStream jstackStream = null;
+            try {
+                jstackStream = new FileOutputStream(new File(dumpPath, "Dubbo_JStack.log" + "." + dateStr));
+                // 打印 JStack
+                JVMUtil.jstack(jstackStream);
+            } catch (Throwable t) {
+                logger.error("dump jstack error", t);
+            } finally {
+                guard.release();
+                if (jstackStream != null) {
+                    try {
+                        jstackStream.flush();
+                        jstackStream.close();
+                    } catch (IOException e) {
                     }
                 }
-
-                lastPrintTime = System.currentTimeMillis();
             }
+
+            lastPrintTime = System.currentTimeMillis();
         });
 
     }

@@ -39,6 +39,13 @@ public interface NotifyListener {
      *
      * @param urls The list of registered information , is always not empty. The meaning is the same as the return value of {@link org.apache.dubbo.registry.RegistryService#lookup(URL)}.
      */
+    /**
+     * 当收到服务变更通知时触发
+     *
+     *
+     *
+     * @param urls
+     */
     void notify(List<URL> urls);
 
 }

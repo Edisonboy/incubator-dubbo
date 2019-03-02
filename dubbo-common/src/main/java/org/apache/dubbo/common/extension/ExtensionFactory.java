@@ -25,6 +25,8 @@ public interface ExtensionFactory {
     /**
      * Get extension.
      *
+     * 获得拓展对象
+     *
      * @param type object type.
      * @param name object name.
      * @return object instance.

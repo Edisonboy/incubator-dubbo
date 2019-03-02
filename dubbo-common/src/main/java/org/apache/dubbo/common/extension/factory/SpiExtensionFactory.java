@@ -25,10 +25,20 @@ import org.apache.dubbo.common.extension.SPI;
  */
 public class SpiExtensionFactory implements ExtensionFactory {
 
+    /**
+     * 获得拓展对象
+     * @param type object type.
+     * @param name object name.
+     * @param <T>
+     * @return
+     */
     @Override
     public <T> T getExtension(Class<T> type, String name) {
+        // 校验是 @SPI
         if (type.isInterface() && type.isAnnotationPresent(SPI.class)) {
+            // 加载拓展接口对应的 ExtensionLoader 对象
             ExtensionLoader<T> loader = ExtensionLoader.getExtensionLoader(type);
+            // 加载拓展对象
             if (!loader.getSupportedExtensions().isEmpty()) {
                 return loader.getAdaptiveExtension();
             }
