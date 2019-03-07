@@ -36,6 +36,7 @@ import org.springframework.beans.factory.xml.NamespaceHandlerSupport;
 public class DubboNamespaceHandler extends NamespaceHandlerSupport {
 
     static {
+        // todo 判断是否重复加载【根据资源路径】
         Version.checkDuplicate(DubboNamespaceHandler.class);
     }
 

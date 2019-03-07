@@ -36,7 +36,7 @@ public abstract class AbstractResult implements Result {
 
     @Override
     public void setAttachments(Map<String, String> map) {
-        this.attachments = map == null ? new HashMap<String, String>() : map;
+        this.attachments = map == null ? new HashMap<>() : map;
     }
 
     @Override
@@ -45,7 +45,7 @@ public abstract class AbstractResult implements Result {
             return;
         }
         if (this.attachments == null) {
-            this.attachments = new HashMap<String, String>();
+            this.attachments = new HashMap<>();
         }
         this.attachments.putAll(map);
     }

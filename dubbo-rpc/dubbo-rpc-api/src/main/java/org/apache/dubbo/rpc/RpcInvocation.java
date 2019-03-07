@@ -49,10 +49,11 @@ public class RpcInvocation implements Invocation, Serializable {
 
     public RpcInvocation(Invocation invocation, Invoker<?> invoker) {
         this(invocation.getMethodName(), invocation.getParameterTypes(),
-                invocation.getArguments(), new HashMap<String, String>(invocation.getAttachments()),
+                invocation.getArguments(), new HashMap<>(invocation.getAttachments()),
                 invocation.getInvoker());
         if (invoker != null) {
             URL url = invoker.getUrl();
+            // attachments记录k-v
             setAttachment(Constants.PATH_KEY, url.getPath());
             if (url.hasParameter(Constants.INTERFACE_KEY)) {
                 setAttachment(Constants.INTERFACE_KEY, url.getParameter(Constants.INTERFACE_KEY));
@@ -100,7 +101,7 @@ public class RpcInvocation implements Invocation, Serializable {
         this.methodName = methodName;
         this.parameterTypes = parameterTypes == null ? new Class<?>[0] : parameterTypes;
         this.arguments = arguments == null ? new Object[0] : arguments;
-        this.attachments = attachments == null ? new HashMap<String, String>() : attachments;
+        this.attachments = attachments == null ? new HashMap<>() : attachments;
         this.invoker = invoker;
     }
 
@@ -151,7 +152,7 @@ public class RpcInvocation implements Invocation, Serializable {
 
     public void setAttachment(String key, String value) {
         if (attachments == null) {
-            attachments = new HashMap<String, String>();
+            attachments = new HashMap<>();
         }
         attachments.put(key, value);
     }

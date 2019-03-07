@@ -177,6 +177,7 @@ public final class Version {
     public static void checkDuplicate(String path, boolean failOnError) {
         try {
             // search in caller's classloader
+            // todo 为什么要获取Version的类加载器
             Enumeration<URL> urls = ClassHelper.getCallerClassLoader(Version.class).getResources(path);
             Set<String> files = new HashSet<String>();
             while (urls.hasMoreElements()) {
